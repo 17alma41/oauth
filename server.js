@@ -15,10 +15,8 @@ passport.use(new GitHubStrategy({
     clientSecret: GITHUB_CLIENT_SECRET,
     callbackURL: "http://localhost:3000/auth/github/callback"
   },
-  function(accessToken, refreshToken, profile, done) {
-    User.findOrCreate({ githubId: profile.id }, function (err, user) {
-      return done(err, user);
-    });
+    (accessToken, refreshToken, profile, done) => {
+        return done(null, profile);
   }
 ));
 
@@ -39,6 +37,14 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Middleware para verificar si el usuario está autenticado
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/');
+}
+
 app.get("/", (req, res) => {
     const html = "<a href='/auth/github'>Login with Github</a>";
     res.send(html);
@@ -55,9 +61,16 @@ app.get("/auth/github/callback",
     console.log(req);
 });
 
-app.get("/profile", (req, res) => {
+app.get("/profile", ensureAuthenticated, (req, res) => {
     res.send(`Hola ${req.user.displayName || req.user.username}`); //Si no tiene displayName, muestra el username
 })
+
+app.get("/logout", (req, res) => {
+    req.logout(done => {
+        console.log(done, "Usuario deslogueado");
+    });
+    res.redirect("/");
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
