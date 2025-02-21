@@ -70,7 +70,7 @@ app.get("/auth/github",
 ));
 
 app.get("/auth/google", 
-    passport.authenticate("google", { scope: ["user:email"] }
+    passport.authenticate("google", { scope: ['profile', 'email'] }
 ));
 
 app.get("/auth/github/callback", 
@@ -89,6 +89,7 @@ app.get("/auth/google/callback",
 
 app.get("/profile", ensureAuthenticated, (req, res) => {
     res.send(`Hola ${req.user.displayName || req.user.username}`); //Si no tiene displayName, muestra el username
+    console.log(req.user) 
 })
 
 app.get("/logout", (req, res) => {
